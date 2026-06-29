@@ -1,20 +1,28 @@
 # Token Runner 🏃
 
-**Token Runner** turns your AI coding token usage into a tiny terminal
-speedometer, with a little runner game on top. It shows how fast you're
-generating tokens right now (tok/s, like watching a local model type) and turns
-that into a side-scrolling runner you can leave on a pane.
+**Token Runner** quietly turns your coding into a game. The tokens you burn drive
+a little side-scrolling runner on a spare pane: a low-key visual nudge that keeps
+you in flow. Cover more ground, beat your own record, keep pushing.
 
-It reads the log files your coding tool already writes on your machine, so
-there's nothing to set up and nothing leaves your computer. No account, no API
-key, no dependencies. Just Python 3.
-
-Today it reads **Claude Code**. Support for other coding tools is planned, which
-is why it's `token-runner` and not `clauderun`.
+It reads the logs your coding tool already writes locally, so there's nothing to
+set up and nothing leaves your machine. Zero dependencies, just Python 3.
 
 ![tokenrun in motion](docs/tokenrun.gif)
 
 <!-- Record it with `tokenrun --demo`, save the clip as docs/tokenrun.gif, and it shows up here. -->
+
+## Supported tools
+
+The name is generic on purpose: today it reads one tool, with more planned.
+
+| Tool | Status |
+|---|---|
+| **Claude Code** | ✅ Supported |
+| Cursor, Copilot, Codex, Gemini CLI, Aider, … | Not yet, PRs welcome |
+
+Only the engine is tool-specific, so adding one is a small, contained change.
+Want yours? [Open an issue](https://github.com/emirsafian/token-runner/issues)
+or see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Install
 
