@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "token-runner"
+version = "0.1.0"
+description = "Terminal speedometer and pixel runner for your Claude Code token usage"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Ebi Mirsafian", email = "ebi.mirsafian@gmail.com" }]
+keywords = ["claude", "claude-code", "tokens", "terminal", "tui", "monitor"]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/emirsafian/token-runner"
+
+[project.scripts]
+tokenrun = "tokenrun.cli:main"
+
+[tool.setuptools]
+packages = ["tokenrun"]
