@@ -100,6 +100,16 @@ Today it cycles none, ghost, dog, buddy. The drawing lives in
    two small dicts under it that set the popup text and colour.
 3. Optional: add a `--cat` flag in `main()`, the same way `--dog` works.
 
+### A scene that changes the character (swim, surf, climb, …)
+
+The biggest jump: a scene where the hero **and** companions get a new pose, like
+the underwater swim (`OCEAN`) or surfing (`SURF`). That spans ~6 files and the
+tricky bit is wiring the new mode into all four figures (hero, buddy, ghost, dog)
+plus gating the land-only cues. There's a step-by-step recipe (with the patterns,
+the exact wiring sites, and the verification commands) in
+`.claude/skills/add-scene/SKILL.md` — copy `_draw_dive` / `_draw_surf` as your
+starting point.
+
 ## Style
 
 Match the file you're editing. Keep things small and readable. If you're adding

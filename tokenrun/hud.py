@@ -94,6 +94,7 @@ def game_hud(W, rate, thinking, live, dist, blk, total7d, biome, redline, frame_
         chunks.append([("PB ", MUTE), (rate_str(pb), (180, 220, 255))])
     chunks.append([("7D ", MUTE), (human(total7d), LABEL)])
     ctrl = [("tab", KEYC), (" ⇄ dash", MUTE), ("   ", None), ("c", KEYC), (" companion", MUTE),
+            ("   ", None), ("b", KEYC), (" scene", MUTE), ("   ", None), ("h", KEYC), (" hi-res", MUTE),
             ("   ", None), ("q", KEYC), (" quit", MUTE)]
     line_b = _fit_row(W, chunks, ctrl, ("   ·   ", BORDERC))
     return [line_a, line_b]

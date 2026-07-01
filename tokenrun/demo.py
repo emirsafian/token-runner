@@ -55,7 +55,8 @@ def demo_director(eng, cfg, records, now, t0):
     elif e < 45:   rate, think = 96.0, False                    # run
     elif e < 50:   rate, think = 40.0, False                    # jog
     elif e < 64:   rate, think = 0.0, False                     # idle → sits down (Zzz late)
-    else:          rate, think = ramp(0, 28, 64, 74), False     # walk → loops
+    elif e < 70:   rate, think = 100.0, False                   # space cruise (zero-g float)
+    else:          rate, think = ramp(0, 28, 70, 74), False     # walk → loops
 
     eng.rate = rate
     eng.thinking = think
@@ -66,8 +67,12 @@ def demo_director(eng, cfg, records, now, t0):
     if e < 22:         cfg.companion = "ghost"                  # showcase each companion in turn
     elif 34 <= e < 44: cfg.companion = "dog"
     elif 44 <= e < 50: cfg.companion = "buddy"
+    elif 64 <= e < 70: cfg.companion = "dog"                    # a dog floats through space
     else:              cfg.companion = None
-    cfg.force_phase = ("day" if e < 18 else "dusk" if e < 36 else "night" if e < 56 else "dawn")
+    cfg.force_biome = ("SURF" if 30 <= e < 44 else "OCEAN" if 44 <= e < 56  # surf, dive, then out to space
+                       else "SPACE" if 64 <= e < 70 else None)
+    cfg.force_phase = ("day" if e < 18 else "dusk" if e < 36 else "night" if e < 56
+                       else "dawn" if e < 64 else "night")
 
     records.has_yesterday = True
     records.streak = 12

@@ -16,6 +16,9 @@ BIOMES = {
     "BEACH": dict(skyTop=(78, 158, 196), skyHaze=(206, 230, 228), gFar=(228, 208, 152),
                   gNear=(202, 176, 116), sun=(255, 250, 226), accent=(86, 200, 206),
                   far=(118, 182, 192), kinds=("palm", "palm", "rock", "palm")),
+    "SURF": dict(skyTop=(64, 150, 206), skyHaze=(190, 226, 238), gFar=(44, 126, 172),
+                 gNear=(18, 78, 128), sun=(255, 250, 226), accent=(196, 240, 246),
+                 far=(96, 150, 172), kinds=("buoy", "sailboat", "buoy", "sailboat")),
     "OCEAN": dict(skyTop=(18, 70, 112), skyHaze=(58, 150, 172), gFar=(30, 92, 122),
                   gNear=(16, 54, 84), sun=(186, 236, 240), accent=(255, 148, 162),
                   far=(22, 80, 110), kinds=("coral", "seaweed", "coral", "rock")),
@@ -37,10 +40,20 @@ BIOMES = {
     "COSMOS": dict(skyTop=(8, 6, 22), skyHaze=(60, 40, 100), gFar=(48, 40, 86),
                    gNear=(20, 16, 40), sun=(210, 220, 255), accent=(180, 158, 240),
                    far=(40, 32, 72), kinds=("rock", "crystal", "rock", "crystal")),
+    "SPACE": dict(skyTop=(6, 7, 18), skyHaze=(26, 22, 54), gFar=(18, 16, 40),
+                  gNear=(8, 8, 22), sun=(214, 224, 255), accent=(150, 200, 255),
+                  far=(30, 26, 60), kinds=("asteroid", "satellite", "asteroid", "asteroid")),
 }
-# the journey: land → sea → cold → deep jungle → fire → city → space
-BIOME_ORDER = ["JUNGLE", "DESERT", "BEACH", "OCEAN", "SNOW", "AMAZON", "VOLCANO", "CITY", "NEON", "COSMOS"]
+# the journey: land → beach → surf → dive → cold → deep jungle → fire → city → cosmos → the void
+BIOME_ORDER = ["JUNGLE", "DESERT", "BEACH", "SURF", "OCEAN", "SNOW", "AMAZON", "VOLCANO", "CITY", "NEON", "COSMOS", "SPACE"]
 BIOME_STEP = 40_000
+
+# submerged scenes: the hero + companions gear up in scuba kit and bubbles rise.
+UNDERWATER = frozenset({"OCEAN"})
+# surface scenes: the hero + companions ride a rolling wave on surfboards.
+SURF = frozenset({"SURF"})
+# zero-g scenes: the hero + companions float in spacesuits, thrusters puffing.
+SPACEWALK = frozenset({"SPACE"})
 
 # time-of-day from the wall clock: (brightness, tint rgb, tint amount, is_night)
 DAYLIGHT = {

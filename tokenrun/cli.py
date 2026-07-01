@@ -16,7 +16,7 @@ from .hud import game_hud, banner_line, dash_footer, MUTE
 from .dashboard import build as dashboard_build
 from .demo import DemoEngine, demo_director
 from .sound import Sound
-from .biomes import BIOMES, DAYLIGHT, day_phase, gait_of
+from .biomes import BIOMES, BIOME_ORDER, DAYLIGHT, day_phase, gait_of, biome_of
 
 
 class Cfg:
@@ -88,7 +88,7 @@ def run(cfg):
             else:
                 W = max(40, min((cfg.force_width or cols) - 1, 240))  # -1: never touch last column
                 ch_rows = max(8, rows - 2)
-                cv = Canvas(W, ch_rows * 2)
+                cv = Canvas(W, ch_rows * 2, xs=2 if getattr(cfg, "hi", False) else 1)
                 rate, thinking, dist, blk = build_frame(cv, eng, scene, cfg, now, records)
                 live = (now - eng.last_mtime) < 25
                 if cfg.sound:
@@ -102,7 +102,7 @@ def run(cfg):
                         snd.play("pb", gap=2, vol=0.45)
                     if "milestone" in scene.events:
                         snd.play("milestone", gap=2, vol=0.45)
-                rows_img = cv.render_rows()
+                rows_img = cv.render_rows_quad() if getattr(cfg, "hi", False) else cv.render_rows()
                 scene.banners = [bn for bn in scene.banners if bn["until"] > now]
                 for k, bn in enumerate(scene.banners[-2:]):       # toast band(s) near the top
                     if 1 + k < len(rows_img):
@@ -143,6 +143,21 @@ def run(cfg):
                                   "buddy": (120, 170, 235)}[cfg.companion]
                             scene.banner(msg, bc, time.time(), dur=1.8)
                             break
+                        if ch in ("h", "H"):             # toggle hi-res quadrant rendering
+                            cfg.hi = not getattr(cfg, "hi", False)
+                            scene.banner("HI-RES  " + ("ON" if cfg.hi else "OFF"),
+                                         (150, 210, 255), time.time(), dur=1.6)
+                            break
+                        if ch in ("b", "B"):             # cycle the scene: auto → each biome → auto
+                            order = [None] + BIOME_ORDER
+                            cur = getattr(cfg, "force_biome", None)
+                            i = order.index(cur) if cur in order else 0
+                            cfg.force_biome = order[(i + 1) % len(order)]
+                            target = cfg.force_biome or biome_of(eng.block(time.time())[0])
+                            scene.cur_biome = cfg.biome = target   # adopt now → no duplicate "ENTERING" toast
+                            label = ("SCENE  " + target) if cfg.force_biome else ("SCENE  AUTO · " + target)
+                            scene.banner(label, BIOMES[target]["accent"], time.time(), dur=2.2)
+                            break
                 else:
                     time.sleep(min(rem, 0.05))
     except KeyboardInterrupt:
@@ -170,6 +185,8 @@ def main():
     ap.add_argument("--dog", action="store_true", help="start with the dog companion (cycle in-app with c)")
     ap.add_argument("--buddy", action="store_true", help="start with the runner-buddy companion (cycle with c)")
     ap.add_argument("--no-daylight", action="store_true", help="disable time-of-day tinting")
+    ap.add_argument("--hi", action="store_true",
+                    help="hi-res quadrant blocks: 2x horizontal detail (toggle in-app with h)")
     ap.add_argument("--demo", action="store_true",
                     help="scripted fake run that shows every feature (for recording a demo video)")
     ap.add_argument("--once", action="store_true")
@@ -200,6 +217,7 @@ def main():
     cfg.daylight = not a.no_daylight
     cfg.force_phase = a.phase if a.phase in DAYLIGHT else None
     cfg.demo = a.demo
+    cfg.hi = a.hi
 
     if a.png:
         cfg.force_biome = a.biome if a.biome in BIOMES else None
@@ -242,10 +260,10 @@ def main():
         eng = Engine(cfg.root); eng.poll()
         cols, rows = get_size()
         W = min(cfg.force_width or cols, 240)
-        cv = Canvas(W, max(8, rows - 2) * 2)
+        cv = Canvas(W, max(8, rows - 2) * 2, xs=2 if a.hi else 1)
         sc = Scene(); sc.t = time.time() - 0.1
         build_frame(cv, eng, sc, cfg, time.time())
-        for l in cv.render_rows():
+        for l in (cv.render_rows_quad() if a.hi else cv.render_rows()):
             sys.stdout.write(l + "\n")
         return
 

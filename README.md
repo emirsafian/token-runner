@@ -66,8 +66,10 @@ tokenrun
 ```
 
 Controls: `q` or Ctrl-C quits, `TAB` flips between the runner and the dashboard,
-`c` cycles your companion. Leave it open on a spare pane and glance at it while
-you work. It fills your terminal and reflows when you resize.
+`c` cycles your companion, and `b` rotates the scene — `AUTO` (the biome follows
+your token distance) then each world in turn (jungle, desert, beach, surf, ocean,
+snow, …), wrapping back to `AUTO`. Leave it open on a spare pane and glance at it
+while you work. It fills your terminal and reflows when you resize.
 
 ## The runner
 
@@ -80,8 +82,19 @@ about 4 ms a frame.
   screen edges glow warm.
 - thinking makes him stop and ponder, with a coffee on a long one. Go idle and he
   sits down on a stool, then nods off.
-- the tokens you generate become distance, rolling you through 10 biomes (jungle,
-  desert, beach, ocean, snow, amazon, volcano, city, neon, cosmos).
+- the tokens you generate become distance, rolling you through 12 biomes (jungle,
+  desert, beach, surf, ocean, snow, amazon, volcano, city, neon, cosmos, space).
+- the surf break drops the runner onto a surfboard, carving a rolling wave with a
+  foaming crest and a curling barrel — buoys and sailboats bob past, dolphins
+  leap, and your companion rides its own board alongside (the dog, tongue out).
+- the ocean is fully submerged: the runner stops walking and **swims like a diver**
+  — horizontal, finning with a flutter kick, mask and air tank on, bubbles
+  trailing up through slanting light shafts. Your companion swims too (the dog
+  doggy-paddles in its own mask and tank).
+- past the cosmos you drift out into **open space**: gravity cuts out and the
+  runner — and companions — **float in spacesuits and bubble helmets**, thrusters
+  puffing as you speed up, past a slow-turning planet, drifting asteroids and
+  satellites, and a streaking comet.
 - the sky matches your actual clock: dawn, day, dusk, night, with a sun, a moon,
   and stars. Each biome has its own critters, and fireflies come out at night.
 - want company? Press `c` to cycle through none, a ghost of yesterday, a dog, or a
