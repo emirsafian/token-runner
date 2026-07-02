@@ -6,8 +6,8 @@
 class Tokenrun < Formula
   desc "Terminal speedometer and pixel runner game for your AI coding token usage"
   homepage "https://github.com/emirsafian/token-runner"
-  url "https://github.com/emirsafian/token-runner/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "642c5c4d14154a8c9b45b048d7001d54680d1b899e8a56001add9a75b77861a4"
+  url "https://github.com/emirsafian/token-runner/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "5ef961d4149ecf3222c37144e55e2561a28fc3a89120825a666131161c07278c"
   license "MIT"
 
   def install
