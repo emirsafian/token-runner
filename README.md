@@ -5,7 +5,9 @@ a little side-scrolling runner on a spare pane: a low-key visual nudge that keep
 you in flow. Cover more ground, beat your own record, keep pushing.
 
 It reads the logs your coding tool already writes locally, so there's nothing to
-set up and nothing leaves your machine. Zero dependencies, just Python 3.
+set up. Zero dependencies, just Python 3. The only thing it ever sends anywhere
+is a check of your own Claude usage limits for the two side gauges — turn that
+off with one keystroke (`u`) or `--no-live` and it's fully offline.
 
 ![tokenrun in motion](docs/tokenrun.gif)
 
@@ -66,10 +68,11 @@ tokenrun
 ```
 
 Controls: `q` or Ctrl-C quits, `TAB` flips between the runner and the dashboard,
-`c` cycles your companion, and `b` rotates the scene — `AUTO` (the biome follows
+`c` cycles your companion, `b` rotates the scene — `AUTO` (the biome follows
 your token distance) then each world in turn (jungle, desert, beach, surf, ocean,
-snow, …), wrapping back to `AUTO`. Leave it open on a spare pane and glance at it
-while you work. It fills your terminal and reflows when you resize.
+snow, …), wrapping back to `AUTO` — and `u` cycles the usage gauges (real limits →
+local estimate → off). Leave it open on a spare pane and glance at it while you
+work. It fills your terminal and reflows when you resize.
 
 ## The runner
 
@@ -112,6 +115,31 @@ from the same local logs and is saved in `~/.tokenrun.json`:
   BEST popup fires.
 - **Streak:** days you coded in a row.
 - **Milestones:** run past a signpost at 100K, 500K, 1M tokens, and so on.
+- **Session & week gauges:** two small translucent bars worn bottom-left, one
+  for the 5-hour block and one for the trailing 7 days. They're blended right
+  into the scene, so the runner and the world keep moving behind them, in the
+  same heatmap gradient as the speed bar — cool and low when you're light,
+  climbing warm as they fill — with the reset countdown above and the amount
+  below. By default they show your **real** Claude limit percentages (see
+  below); press `u` to switch to a local estimate or hide them.
+
+### The usage gauges: real limits, estimate, or off (`u`)
+
+Out of the box the two gauges show the **actual** numbers from Claude's usage
+page — the same "3% used / resets in 4 hr 20 min" you see in Claude Code, session
+and weekly. Press `u` to cycle **real → local estimate → off**.
+
+Getting the real numbers is the one time tokenrun uses the network: a single
+authenticated call to Anthropic's own usage API, using the Claude Code token
+already on your machine (keychain on macOS, `~/.claude` on Linux) — your token,
+your account, nothing shared with anyone. No token or no connection just falls
+back to the local estimate, and it tells you on screen which mode it's in.
+
+Want it **fully offline**? Press `u` to the estimate (or hidden) state, or start
+with `--no-live` (`TOKENRUN_LIVE=0`) and it never touches the network — the gauge
+then estimates against your own heaviest recent usage. You can also point the
+live mode at a token yourself with `TOKENRUN_TOKEN` or a `~/.tokenrun-token`
+file, and `tokenrun --usage-check` prints exactly what the usage API returns.
 
 ## The dashboard
 
@@ -134,6 +162,8 @@ speed.
 | `--dir` / `TOKENRUN_DIR` | `~/.claude/projects` | where Claude Code keeps its logs |
 | `--fps` | `14` | frames per second |
 | `--dog` / `--buddy` | off | start with a companion (cycle in-app with `c`) |
+| `--no-live` / `TOKENRUN_LIVE=0` | off | fully offline: gauges use a local estimate, no call to Anthropic (in-app: `u`) |
+| `--no-usage` | off | start with the usage gauges hidden (toggle with `u`) |
 | `--sound` | off | footsteps and cues via macOS afplay |
 | `--no-daylight` | off | turn off the time-of-day tint |
 | `--demo` | off | scripted run that shows everything, for recording |
@@ -165,6 +195,7 @@ It's a small package, one job per file, so adding things is easy:
 tokenrun/
   cli.py        args, the main loop, the TAB toggle
   engine.py     reads transcripts, rates, the 5h / 7d windows
+  usage.py      optional --live fetch of the real limits
   dashboard.py  the speedometer view
   render.py     colours and ANSI
   canvas.py     the half-block pixel buffer + PNG writer
@@ -180,11 +211,14 @@ tokenrun/
 
 ## Good to know
 
-- It only sees usage on this machine for this account. Other machines and
-  claude.ai won't show up.
-- The 5 hour block and weekly totals are rebuilt from your local transcripts and
-  get close to Anthropic's real accounting, which isn't fully exposed. Treat them
-  as a good guide, not a billing statement.
+- The runner, distance, and dashboard totals only see usage on this machine for
+  this account — other machines and claude.ai won't show up. (The usage-gauge
+  percentages are the exception: they come from Anthropic and reflect your whole
+  account, unless you switch the gauge to the local estimate with `u`.)
+- The dashboard's 5 hour block and weekly totals are rebuilt from your local
+  transcripts and get close to Anthropic's real accounting, which isn't fully
+  exposed. Treat them as a good guide, not a billing statement — the usage gauges
+  show the exact limit percentages.
 
 ## Contributing
 

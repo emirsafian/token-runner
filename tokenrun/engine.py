@@ -172,6 +172,52 @@ class Engine:
                     out += o; inp += i; cc += c; cr += r
         return out, inp, cc + cr, out + inp + cc + cr, max(0.0, end - now), active
 
+    def block_peak(self, now):
+        """Largest 5h-block total (out+in+cache) across the trailing 7 days.
+        The session gauge fills against this, so the bar shows *this* block's
+        consumption as a fraction of your heaviest recent block — a real,
+        self-calibrating scale, since there's no locally knowable hard quota.
+        Blocks are anchored exactly like `block()` so the current one lines up."""
+        if not self.msgs:
+            return 0
+        rows = sorted(self.msgs, key=lambda m: m[0])
+        peak = acc = 0
+        start = last = rows[0][0]
+        for t, o, i, c, r in rows:
+            if t - last >= BLOCK or t - start >= BLOCK:
+                if acc > peak:
+                    peak = acc
+                start = last = t
+                acc = 0
+            last = t
+            acc += o + i + c + r
+        return acc if acc > peak else peak
+
+    def day_peak(self, now):
+        """Largest single local-day total across the trailing 7 days. The week
+        gauge scales against 7x this — a 'full' week being roughly every day as
+        heavy as your heaviest — so its bar sits progressively, not pinned."""
+        tot = {}
+        for t, o, i, c, r in self.msgs:
+            lt = time.localtime(t)
+            key = (lt.tm_year, lt.tm_yday)
+            tot[key] = tot.get(key, 0) + o + i + c + r
+        return max(tot.values()) if tot else 0
+
+    def week_reset_in(self, now):
+        """Seconds until the oldest usage inside the trailing 7-day window ages
+        out. Unlike the 5h block, the week is a plain rolling sum with no
+        session-style anchor, so its "reset" is the moment the total is next
+        due to shrink, not a full drop to zero."""
+        oldest = None
+        lo = now - WEEK
+        for t, *_ in self.msgs:
+            if t >= lo and (oldest is None or t < oldest):
+                oldest = t
+        if oldest is None:
+            return 0.0
+        return max(0.0, oldest + WEEK - now)
+
     def buckets(self, now, span, n):
         """Per-bucket average output tok/s over the trailing `span` seconds."""
         if n <= 0:

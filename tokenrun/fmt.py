@@ -20,8 +20,11 @@ def dur(s):
     s = int(s)
     if s <= 0:
         return "now"
-    h, rem = divmod(s, 3600)
+    d, rem = divmod(s, 86400)
+    h, rem = divmod(rem, 3600)
     m = rem // 60
+    if d:
+        return f"{d}d{h:02d}h"
     if h:
         return f"{h}h{m:02d}m"
     if m:

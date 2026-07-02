@@ -4,7 +4,7 @@ achievement toasts and the dashboard footer.
 from .render import ESC, fg, grad, speedT, shade, clampi
 from .fmt import human, rate_str, dur
 from .biomes import BIOMES, gait_of
-from .engine import HOUR
+from .engine import HOUR, DAY
 
 # HUD palette
 MUTE = (120, 130, 150)
@@ -94,8 +94,8 @@ def game_hud(W, rate, thinking, live, dist, blk, total7d, biome, redline, frame_
         chunks.append([("PB ", MUTE), (rate_str(pb), (180, 220, 255))])
     chunks.append([("7D ", MUTE), (human(total7d), LABEL)])
     ctrl = [("tab", KEYC), (" ⇄ dash", MUTE), ("   ", None), ("c", KEYC), (" companion", MUTE),
-            ("   ", None), ("b", KEYC), (" scene", MUTE), ("   ", None), ("h", KEYC), (" hi-res", MUTE),
-            ("   ", None), ("q", KEYC), (" quit", MUTE)]
+            ("   ", None), ("b", KEYC), (" scene", MUTE), ("   ", None), ("u", KEYC), (" usage", MUTE),
+            ("   ", None), ("h", KEYC), (" hi-res", MUTE), ("   ", None), ("q", KEYC), (" quit", MUTE)]
     line_b = _fit_row(W, chunks, ctrl, ("   ·   ", BORDERC))
     return [line_a, line_b]
 
@@ -107,6 +107,109 @@ def banner_line(W, text, col):
     band = " " * pad + inner + " " * max(0, W - pad - len(inner))
     bg = shade(col, 0.3)
     return (f"{ESC}[48;2;{bg[0]};{bg[1]};{bg[2]}m{ESC}[1m{ESC}[38;2;245;248;255m" + band + ESC + "[0m")
+
+
+# -- the two vertical usage gauges, worn bottom-left over the running scene ----
+# They aren't a widget stamped on top: the bars are alpha-blended straight into
+# the pixel canvas (like the blaze glow / god rays), so the runner and the world
+# keep moving *behind* them, and the little labels sit on the scene's own colour
+# with nothing opaque added. Each bar fills *progressively* with what you've
+# actually used this window, drawn in the top speed bar's heatmap gradient — cool
+# and low when you're light, climbing warm as the window fills. There's no
+# locally knowable hard quota, so "full" is scaled to your own heaviest recent
+# usage (see the README), not a billing limit.
+G_SLOT = 6                            # character columns budgeted per gauge (bar + its labels)
+G_GAP = 2                             # gap between the two gauges
+G_MARG = 1                            # left margin
+G_BARW = 4                            # bar width in columns (centred in the slot)
+G_TRACK = (150, 162, 186)            # the faint empty "tube" above the fill
+G_FILL_A = 0.78                       # fill opacity (scene still bleeds through)
+G_TRACK_A = 0.14                       # empty-track opacity (barely there)
+
+
+def _g_center(text, slot):
+    text = text[:slot]
+    return (slot - len(text)) // 2
+
+
+def draw_usage_gauges(cv, sess, week):
+    """Composite the two translucent usage gauges into the canvas, bottom-left:
+    SESSION (the 5h block) and WEEK (the trailing 7 days). Each argument is a
+    ``(frac, reset_s, active, label)`` tuple — ``frac`` in [0,1] fills the bar
+    bottom-up in the speed-bar heatmap gradient, ``label`` is the line under it
+    (a real "3%" from the live limits, or the token total from the local
+    estimate). The source doesn't matter here. Returns the text metadata (title /
+    reset countdown / label, per gauge) for `gauge_overlay` to lay on top, or
+    None if the canvas is too small to wear them cleanly."""
+    W, H = cv.w, cv.h
+    CH = H // 2
+    if W < 64 or CH < 16:
+        return None
+
+    gauge_h = clampi(int(round(CH * 0.30)), 9, CH - 1)   # compact: ~a third of the scene height
+    bar_rows = gauge_h - 3                              # 3 label rows: title, reset, total
+    if bar_rows < 5:
+        return None
+    title_row = CH - 3 - bar_rows
+    reset_row = CH - 2 - bar_rows
+    total_row = CH - 1
+    if title_row < 0:
+        return None
+    y_bot = 2 * (CH - 2) + 1                            # bottom pixel of the bar (= H - 3)
+    y_top = 2 * (CH - 1 - bar_rows)                     # top pixel of the bar
+    bar_px = y_bot - y_top + 1
+
+    gauges = [
+        ("SESS", sess, HOUR, G_MARG),
+        ("WEEK", week, DAY, G_MARG + G_SLOT + G_GAP),
+    ]
+    items = []
+    for name, (frac, reset, active, label), soon_below, slot_col in gauges:
+        bx0 = slot_col + (G_SLOT - G_BARW) // 2
+        fill_px = int(round(clampi(frac, 0.0, 1.0) * bar_px))
+        if frac > 0 and fill_px == 0:                  # keep a visible sliver for small-but-nonzero use
+            fill_px = 1
+        for i in range(bar_px):                        # i = 0 at the bottom
+            y = y_bot - i
+            if i < fill_px:
+                col, a = grad(i / max(1, bar_px - 1)), G_FILL_A
+            else:
+                col, a = G_TRACK, G_TRACK_A
+            for x in range(bx0, bx0 + G_BARW):
+                cv.shade_px(x, y, col, a)
+
+        soon = active and reset < soon_below
+        reset_txt = dur(reset) if active else "idle"
+        items.append((title_row, slot_col, name, LABEL))
+        items.append((reset_row, slot_col, reset_txt, (255, 206, 112) if soon else WHITE))
+        items.append((total_row, slot_col, label, WHITE))
+    return {"items": items, "width": G_MARG + G_SLOT * 2 + G_GAP}
+
+
+def gauge_overlay(cv, meta, hud_h):
+    """Absolute-positioned ANSI overlay for the gauge labels. Each glyph is
+    backed by the scene colour behind it (lightly darkened just for legibility),
+    so the text floats on the running world instead of on an opaque band. `hud_h`
+    is the number of HUD lines above the scene image."""
+    if not meta:
+        return ""
+    out = []
+    for row, slot_col, text, fgc in meta["items"]:
+        text = text[:G_SLOT]
+        col0 = slot_col + _g_center(text, G_SLOT)
+        abs_row = hud_h + 1 + row
+        parts = [f"{ESC}[{abs_row};{col0 + 1}H"]
+        last = None
+        for i, ch in enumerate(text):
+            sr, sg, sb = cv.cell_rgb(col0 + i, row)
+            br, bg, bb = sr * 45 >> 7, sg * 45 >> 7, sb * 45 >> 7   # ~35% of the scene colour
+            if (br, bg, bb) != last:
+                parts.append(f"{ESC}[38;2;{fgc[0]};{fgc[1]};{fgc[2]};48;2;{br};{bg};{bb}m")
+                last = (br, bg, bb)
+            parts.append(ch)
+        parts.append(ESC + "[0m")
+        out.append("".join(parts))
+    return "".join(out)
 
 
 def dash_footer(W):

@@ -18,6 +18,7 @@ change:
 tokenrun/
   cli.py        args, the main loop, the TAB view toggle, --png/--once
   engine.py     reads the transcripts; the numbers behind everything
+  usage.py      optional --live fetch of the real Claude limits
   dashboard.py  the speedometer view (TAB)
   render.py     colour math + ANSI (pack/shade/lerpc/grad)
   canvas.py     the half-block pixel canvas + PNG writer

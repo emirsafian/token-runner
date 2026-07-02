@@ -17,6 +17,7 @@ class DemoEngine:
         self.thinking = False
         self.dist = 0.0
         self.reset = 7200.0
+        self.wreset = 400000.0
 
     def poll(self):
         pass
@@ -33,6 +34,15 @@ class DemoEngine:
 
     def window(self, now, span):
         return self.dist * 7, self.dist * 1.3, self.dist * 320, self.dist * 1850
+
+    def week_reset_in(self, now):
+        return self.wreset
+
+    def block_peak(self, now):
+        return 20_000_000.0        # fixed cap so the demo session gauge fills progressively
+
+    def day_peak(self, now):
+        return 130_000_000.0       # week_ref = 7x this; demo week gauge stays partial
 
     def buckets(self, now, span, n):
         return [max(0.0, 55 + 55 * math.sin(i * 0.27) + 26 * math.sin(i * 0.09 + 1)) for i in range(max(0, n))]
@@ -63,6 +73,7 @@ def demo_director(eng, cfg, records, now, t0):
     eng.last_mtime = now
     eng.dist = 4000 + e * 5200                                  # biomes + milestones roll by
     eng.reset = max(120.0, 8000.0 - e * 80.0)
+    eng.wreset = max(1800.0, 200000.0 - e * 2700.0)
 
     if e < 22:         cfg.companion = "ghost"                  # showcase each companion in turn
     elif 34 <= e < 44: cfg.companion = "dog"

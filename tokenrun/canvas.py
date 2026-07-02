@@ -146,6 +146,22 @@ class Canvas:
                                           ((p >> 8) & 255) * (1 - f) + g0 * f,
                                           (p & 255) * (1 - f) + b0 * f)
 
+    def cell_rgb(self, x, cy):
+        """Representative colour of the character cell at logical column ``x``,
+        character row ``cy`` — the two stacked pixels of that cell averaged.
+        Lets an ANSI text overlay use the scene's own colour as its background,
+        so text sits *on* the running scene with nothing opaque added."""
+        x = int(x); cy = int(cy)
+        y0 = 2 * cy
+        if not (0 <= x < self.w and 0 <= y0 + 1 < self.h):
+            return (0, 0, 0)
+        base = y0 * self.pw + x * self.xs
+        p0 = self.buf[base]
+        p1 = self.buf[base + self.pw]
+        return (((p0 >> 16) & 255) + ((p1 >> 16) & 255)) >> 1, \
+               (((p0 >> 8) & 255) + ((p1 >> 8) & 255)) >> 1, \
+               ((p0 & 255) + (p1 & 255)) >> 1
+
     def _pref(self, top, bot):
         k = (top, bot)
         s = self._sgr.get(k)
